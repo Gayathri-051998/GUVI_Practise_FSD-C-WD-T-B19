@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+    <script src="script.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card {
+            width: 80px;
+            height: 80px;
+            background-color: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        .flipped {
+            background-color: white;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gray-500">
+    <header class="text-center mb-6">
+        <h1 class="text-3xl font-bold">Memory Game</h1>
+        <button id="restart" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Restart</button>
+    </header>
+    <div id="game-board" class="grid grid-cols-4 gap-4 p-4 bg-white shadow-md rounded-lg ">
+        <!-- Cards will be dynamically generated here -->
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const gameBoard = document.getElementById("game-board");
+            const restartButton = document.getElementById("restart");
+            let cards = ["🍎", "🍎", "🍌", "🍌", "🍇", "🍇", "🍉", "🍉", "🍓", "🍓", "🥝", "🥝", "🍍", "🍍", "🥥", "🥥"];
+            let flippedCards = [];
+            let matchedPairs = 0;
+
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    let j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            function createBoard() {
+                gameBoard.innerHTML = "";
+                shuffle(cards);
+                cards.forEach(symbol => {
+                    const card = document.createElement("div");
+                    card.classList.add("card");
+                    card.dataset.symbol = symbol;
+                    card.addEventListener("click", flipCard);
+                    gameBoard.appendChild(card);
+                });
+            }
+
+            function flipCard() {
+                if (flippedCards.length < 2 && !this.classList.contains("flipped")) {
+                    this.textContent = this.dataset.symbol;
+                    this.classList.add("flipped");
+                    flippedCards.push(this);
+                }
+                if (flippedCards.length === 2) {
+                    setTimeout(checkMatch, 1000);
+                }
+            }
+
+            function checkMatch() {
+                if (flippedCards[0].dataset.symbol === flippedCards[1].dataset.symbol) {
+                    flippedCards = [];
+                    matchedPairs++;
+                    if (matchedPairs === cards.length / 2) {
+                        alert("You win!");
+                    }
+                } else {
+                    flippedCards.forEach(card => {
+                        card.textContent = "";
+                        card.classList.remove("flipped");
+                    });
+                    flippedCards = [];
+                }
+            }
+
+            restartButton.addEventListener("click", () => {
+                matchedPairs = 0;
+                flippedCards = [];
+                createBoard();
+            });
+
+            createBoard();
+        });
+    </script>
+</body>
+</html>
