@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Expense Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-bold text-center mb-4">Income & Expense Tracker</h2>
+        
+        <!-- Summary -->
+        <div class="mb-4 p-4 bg-gray-200 rounded">
+            <p>Total Income: <span id="total-income" class="font-bold">$0</span></p>
+            <p>Total Expense: <span id="total-expense" class="font-bold">$0</span></p>
+            <p>Net Balance: <span id="net-balance" class="font-bold">$0</span></p>
+        </div>
+        
+        <!-- Entry Form -->
+        <form id="entry-form" class="mb-4">
+            <input type="text" id="description" placeholder="Description" class="border p-2 rounded w-full mb-2" required>
+            <input type="number" id="amount" placeholder="Amount" class="border p-2 rounded w-full mb-2" required>
+            <select id="type" class="border p-2 rounded w-full mb-2">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Add Entry</button>
+        </form>
+        
+        <!-- Filters -->
+        <div class="mb-4">
+            <label><input type="radio" name="filter" value="all" checked> All</label>
+            <label><input type="radio" name="filter" value="income"> Income</label>
+            <label><input type="radio" name="filter" value="expense"> Expense</label>
+        </div>
+        
+        <!-- Entries List -->
+        <ul id="entries-list" class="space-y-2"></ul>
+    </div>
+    
+    <script>
+        let entries = JSON.parse(localStorage.getItem('entries')) || [];
+        const form = document.getElementById('entry-form');
+        const list = document.getElementById('entries-list');
+        const totalIncomeEl = document.getElementById('total-income');
+        const totalExpenseEl = document.getElementById('total-expense');
+        const netBalanceEl = document.getElementById('net-balance');
+        
+        function updateSummary() {
+            const income = entries.filter(e => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
+            const expense = entries.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+            totalIncomeEl.textContent = `$${income}`;
+            totalExpenseEl.textContent = `$${expense}`;
+            netBalanceEl.textContent = `$${income - expense}`;
+        }
+        
+        function renderEntries(filter = 'all') {
+            list.innerHTML = '';
+            entries.filter(e => filter === 'all' || e.type === filter).forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.className = `p-2 rounded shadow flex justify-between ${entry.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`;
+                li.innerHTML = `
+                    <span>${entry.description} - $${entry.amount}</span>
+                    <div>
+                        <button onclick="editEntry(${index})" class="text-blue-500">Edit</button>
+                        <button onclick="deleteEntry(${index})" class="text-red-500">Delete</button>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+            updateSummary();
+        }
+        
+        function saveEntries() {
+            localStorage.setItem('entries', JSON.stringify(entries));
+            renderEntries();
+        }
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const type = document.getElementById('type').value;
+            
+            if (description && amount) {
+                entries.push({ description, amount, type });
+                saveEntries();
+                form.reset();
+            }
+        });
+        
+        function deleteEntry(index) {
+            entries.splice(index, 1);
+            saveEntries();
+        }
+        
+        function editEntry(index) {
+            const entry = entries[index];
+            document.getElementById('description').value = entry.description;
+            document.getElementById('amount').value = entry.amount;
+            document.getElementById('type').value = entry.type;
+            deleteEntry(index);
+        }
+        
+        document.querySelectorAll('input[name="filter"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                renderEntries(this.value);
+            });
+        });
+        
+        renderEntries();
+    </script>
+</body>
+</html>
